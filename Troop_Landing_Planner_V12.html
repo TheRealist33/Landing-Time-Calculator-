@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Troop Landing Planner V12</title>
+<style>
+body{font-family:system-ui,Arial;margin:0;padding:20px;background:#08133a;color:white}
+.card{background:#1b2648;border-radius:20px;padding:20px;margin-bottom:18px}
+h1,h2{margin-top:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input{padding:12px;border-radius:10px;border:none;font-size:18px}
+.num{width:80px;text-align:center}
+.good{color:#22c55e;font-weight:bold;font-size:24px}
+.warn{color:#f59e0b;font-weight:bold;font-size:24px}
+</style>
+</head>
+<body>
+
+<h1>Troop Landing Planner V12</h1>
+
+<div class="card">
+<div><b>Local Time:</b> <span id="localTime"></span></div>
+<div><b>UTC Time:</b> <span id="utcTime"></span></div>
+<div><b>Next 00:00 UTC Reset In:</b> <span id="resetTime"></span></div>
+</div>
+
+<div class="card">
+<h2>Training Duration</h2>
+<div class="row">
+Days <input id="days" class="num" type="number" value="0">
+Hours <input id="hours" class="num" type="number" value="0">
+Minutes <input id="minutes" class="num" type="number" value="0">
+Seconds <input id="seconds" class="num" type="number" value="0">
+</div>
+</div>
+
+<div class="card">
+<h2>Target Landing Time</h2>
+<div class="row">
+<input id="landingDate" type="date">
+<input id="landingTime" type="time" value="00:00">
+</div>
+</div>
+
+<div class="card">
+<h2>Results</h2>
+<p><b>Current Time</b><br><span id="currentOut"></span></p>
+<p><b>Target Landing Time</b><br><span id="landingOut"></span></p>
+<p><b>Required Start Time</b><br><span id="startOut"></span></p>
+<p><b>Time Until Start</b><br><span id="countdownOut"></span></p>
+<div id="statusOut"></div>
+</div>
+
+<script>
+function fmt(d){
+ return d.toLocaleString();
+}
+
+function updateClock(){
+ const now=new Date();
+
+ document.getElementById("localTime").textContent=now.toLocaleString();
+ document.getElementById("utcTime").textContent=now.toUTCString();
+
+ const nextReset=new Date(Date.UTC(
+ now.getUTCFullYear(),
+ now.getUTCMonth(),
+ now.getUTCDate()+1,0,0,0
+ ));
+
+ const diff=nextReset-now;
+
+ const rh=Math.floor(diff/3600000);
+ const rm=Math.floor((diff%3600000)/60000);
+ const rs=Math.floor((diff%60000)/1000);
+
+ document.getElementById("resetTime").textContent=`${rh}h ${rm}m ${rs}s`;
+
+ calculate();
+}
+
+function calculate(){
+
+ const days=Number(document.getElementById("days").value)||0;
+ const hours=Number(document.getElementById("hours").value)||0;
+ const minutes=Number(document.getElementById("minutes").value)||0;
+ const seconds=Number(document.getElementById("seconds").value)||0;
+
+ const date=document.getElementById("landingDate").value;
+ const time=document.getElementById("landingTime").value;
+
+ const now=new Date();
+
+ document.getElementById("currentOut").textContent=fmt(now);
+
+ if(!date){
+   return;
+ }
+
+ const targetLanding=new Date(date+"T"+time+":00");
+
+ const durationMs=(days*86400+hours*3600+minutes*60+seconds)*1000;
+
+ const requiredStart=new Date(targetLanding.getTime()-durationMs);
+
+ document.getElementById("landingOut").textContent=fmt(targetLanding);
+ document.getElementById("startOut").textContent=fmt(requiredStart);
+
+ const diff=requiredStart-now;
+
+ if(diff<=0){
+   document.getElementById("countdownOut").textContent="0d 0h 0m 0s";
+   document.getElementById("statusOut").innerHTML='<div class="good">START NOW</div>';
+ }else{
+   const d=Math.floor(diff/86400000);
+   const h=Math.floor((diff%86400000)/3600000);
+   const m=Math.floor((diff%3600000)/60000);
+   const s=Math.floor((diff%60000)/1000);
+
+   document.getElementById("countdownOut").textContent=`${d}d ${h}h ${m}m ${s}s`;
+   document.getElementById("statusOut").innerHTML='<div class="warn">WAIT TO START</div>';
+ }
+}
+
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",calculate));
+
+setInterval(updateClock,1000);
+updateClock();
+</script>
+
+</body>
+</html>
