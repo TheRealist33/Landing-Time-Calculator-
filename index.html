@@ -38,12 +38,6 @@ Seconds <input id="s" class="num" type="number" value="0" min="0">
 </div>
 
 <div class="card">
-<h2>Desired Finish Time (UTC)</h2>
-<input id="finishDate" type="date">
-<input id="finishTime" type="time" value="00:00">
-</div>
-
-<div class="card">
 <button id="localBtn">LOCAL</button>
 <button id="utcBtn">UTC</button>
 </div>
@@ -108,12 +102,6 @@ function calc(){
  <p><b>Troops Finish If Started Now</b><br>${fmt(finishIfStartedNow)}</p>
 
  <hr>
-
- <h2>Desired Finish Calculation</h2>
- <p><b>Desired Finish Time</b><br>${desiredFinish ? fmt(desiredFinish) : "Select a date/time"}</p>
- <p><b>Begin Training</b><br>${beginTraining ? fmt(beginTraining) : "-"}</p>
- <p><b>Countdown To Start</b><br>${countdown || "-"}</p>
- ${status}
  `;
 }
 
