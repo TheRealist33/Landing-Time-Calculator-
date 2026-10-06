@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KvK Landing Planner V9</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#0f172a;color:#fff;max-width:1000px;margin:auto;padding:16px}
+.card{background:#1e293b;border-radius:16px;padding:16px;margin:12px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input{padding:10px;border:none;border-radius:8px}
+.num{width:70px;text-align:center}
+.toggle button{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;margin-right:8px}
+.active{outline:3px solid #22c55e}
+.good{color:#22c55e;font-weight:bold}
+.bad{color:#ef4444;font-weight:bold}
+h1{text-align:center}
+</style>
+</head>
+<body>
+
+<h1>KvK Landing Planner V9</h1>
+
+<div class="card">
+<div><b>Local Time:</b> <span id="local"></span></div>
+<div><b>UTC Time:</b> <span id="utc"></span></div>
+<div><b>Next 00:00 UTC Reset In:</b> <span id="reset"></span></div>
+</div>
+
+<div class="card">
+<h2>Training Duration</h2>
+<div class="row">
+Days <input class="num" id="days" type="number" min="0" value="0">
+Hours <input class="num" id="hours" type="number" min="0" value="0">
+Minutes <input class="num" id="minutes" type="number" min="0" value="0">
+Seconds <input class="num" id="seconds" type="number" min="0" value="0">
+</div>
+</div>
+
+<div class="card">
+<h2>Target Landing (UTC)</h2>
+<div class="row">
+<input id="landingDate" type="date">
+<input id="landingTime" type="time" value="00:00">
+</div>
+</div>
+
+<div class="card toggle">
+<h2>Display Mode</h2>
+<button id="localBtn">LOCAL</button>
+<button id="utcBtn">UTC</button>
+</div>
+
+<div class="card" id="results"></div>
+
+<script>
+let displayMode="local";
+function nextReset(){const r=new Date();r.setUTCHours(24,0,0,0);return r;}
+function formatDate(dt){return displayMode==="utc"?dt.toUTCString():dt.toLocaleString();}
+function updateHeader(){
+ const now=new Date();
+ local.textContent=now.toLocaleString();
+ utc.textContent=now.toUTCString();
+ const diff=nextReset()-now;
+ reset.textContent=`${Math.floor(diff/3600000)}h ${Math.floor((diff%3600000)/60000)}m ${Math.floor((diff%60000)/1000)}s`;
+}
+function calculate(){
+ if(!landingDate.value) return;
+ const duration=((((+days.value||0)*24+(+hours.value||0))*60+(+minutes.value||0))*60+(+seconds.value||0))*1000;
+ const targetUTC=new Date(landingDate.value+"T"+(landingTime.value||"00:00")+":00Z");
+ const startUTC=new Date(targetUTC.getTime()-duration);
+ const now=new Date();
+ const wait=startUTC-now;
+ let status='<span class="good">WAIT FOR OPTIMAL START</span>';
+ if(wait<=0) status='<span class="good">START NOW</span>';
+ if(targetUTC<=now) status='<span class="bad">TARGET LANDING TIME HAS PASSED</span>';
+ const rem=Math.max(0,wait);
+ results.innerHTML=`<p><b>Start Training At</b><br>${formatDate(startUTC)}</p>
+ <p><b>Landing Time</b><br>${formatDate(targetUTC)}</p>
+ <p><b>Countdown To Start</b><br>${Math.floor(rem/3600000)}h ${Math.floor((rem%3600000)/60000)}m ${Math.floor((rem%60000)/1000)}s</p>
+ <p>${status}</p>`;
+}
+function setMode(m){
+ displayMode=m;
+ localBtn.classList.toggle("active",m==="local");
+ utcBtn.classList.toggle("active",m==="utc");
+ calculate();
+}
+localBtn.onclick=()=>setMode("local");
+utcBtn.onclick=()=>setMode("utc");
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",calculate));
+const r=new Date(); r.setUTCHours(24,0,0,0);
+landingDate.value=r.toISOString().slice(0,10);
+setMode("local");
+setInterval(()=>{updateHeader();calculate();},1000);
+updateHeader();calculate();
+</script>
+</body>
+</html>
